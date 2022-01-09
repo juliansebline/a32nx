@@ -5,6 +5,8 @@ export class MathUtils {
 
    static RADIANS_TO_DEGREES = 180 / Math.PI;
 
+    static DIV_FEET_TO_NAUTICAL_MILES = 6076.12;
+
    private static optiPow10 = [];
 
    public static fastToFixed(val: number, fraction: number): string {
@@ -33,6 +35,15 @@ export class MathUtils {
        }
 
        return (Math.round(val * coefficient) / coefficient);
+   }
+
+   public static clampAngle(angle: number): Degrees {
+       let startAngle = angle;
+
+       while (startAngle > 360.0) startAngle -= 360.0;
+       while (startAngle < -360.0) startAngle += 360.0;
+
+       return startAngle;
    }
 
    public static diffAngle(a: number, b: number, direction?: TurnDirection): number {

@@ -6,14 +6,17 @@
 import { Leg } from '@fmgc/guidance/lnav/legs/Leg';
 import { Coordinates } from '@fmgc/flightplanning/data/geo';
 import { Guidable } from '@fmgc/guidance/Guidable';
+import { Waypoint } from 'msfs-navdata';
+import { DmeArcTransition } from '@fmgc/guidance/lnav/transitions/DmeArcTransition';
 import { distanceTo } from 'msfs-geo';
 import { sideOfPointOnCourseToFix } from '@fmgc/guidance/lnav/CommonGeometry';
+import { fixCoordinates } from '@fmgc/flightplanning/new/utils';
 import { FixedRadiusTransition } from '@fmgc/guidance/lnav/transitions/FixedRadiusTransition';
 import { DmeArcTransition } from '@fmgc/guidance/lnav/transitions/DmeArcTransition';
 
 export abstract class XFLeg extends Leg {
     protected constructor(
-        public fix: WayPoint,
+        public fix: Waypoint,
     ) {
         super();
     }
@@ -31,10 +34,10 @@ export abstract class XFLeg extends Leg {
             return this.outboundGuidable.getPathStartPoint();
         }
 
-        return this.fix.infos.coordinates;
+        return fixCoordinates(this.fix.location);
     }
 
-    get terminationWaypoint(): WayPoint {
+    get terminationWaypoint(): Waypoint {
         return this.fix;
     }
 
@@ -50,7 +53,7 @@ export abstract class XFLeg extends Leg {
      * Returns `true` if the inbound transition has overshot the leg
      */
     get overshot(): boolean {
-        const side = sideOfPointOnCourseToFix(this.fix.infos.coordinates, this.outboundCourse, this.getPathStartPoint());
+        const side = sideOfPointOnCourseToFix(fixCoordinates(this.fix.location), this.outboundCourse, this.getPathStartPoint());
 
         return side === 1;
     }
@@ -62,6 +65,6 @@ export abstract class XFLeg extends Leg {
             return 0;
         }
 
-        return distanceTo(startPoint, this.fix.infos.coordinates);
+        return distanceTo(startPoint, fixCoordinates(this.fix.location));
     }
 }

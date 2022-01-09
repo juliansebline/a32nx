@@ -10,11 +10,12 @@ import { Leg } from '@fmgc/guidance/lnav/legs/Leg';
 import { PathVector, PathVectorType } from '@fmgc/guidance/lnav/PathVector';
 import { Guidable } from '@fmgc/guidance/Guidable';
 import { LegMetadata } from '@fmgc/guidance/lnav/legs/index';
+import { Waypoint } from 'msfs-navdata';
 
 /**
  * Temporary - better solution is just to have an `InfiniteLine` vector...
  */
-const VM_LEG_SIZE = 321;
+const VM_LEG_SIZE = 32;
 
 // TODO needs updated with wind prediction, and maybe local magvar if following for longer distances
 export class VMLeg extends Leg {
@@ -30,7 +31,7 @@ export class VMLeg extends Leg {
         this.segment = segment;
     }
 
-    get terminationWaypoint(): WayPoint {
+    get terminationWaypoint(): Waypoint {
         return undefined;
     }
 

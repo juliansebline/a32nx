@@ -14,6 +14,10 @@ import { Transition } from '@fmgc/guidance/lnav/Transition';
 import { Geo } from '@fmgc/utils/Geo';
 import { FixedRadiusTransition } from '@fmgc/guidance/lnav/transitions/FixedRadiusTransition';
 import { DmeArcTransition } from '@fmgc/guidance/lnav/transitions/DmeArcTransition';
+import { bearingTo, distanceTo } from 'msfs-geo';
+import { MathUtils } from '@shared/MathUtils';
+import { Waypoint } from 'msfs-navdata';
+import { fixCoordinates } from '@fmgc/flightplanning/new/utils';
 import { LegMetadata } from '@fmgc/guidance/lnav/legs/index';
 import { PathVector, PathVectorType } from '../PathVector';
 
@@ -21,7 +25,7 @@ export class CFLeg extends XFLeg {
     private computedPath: PathVector[] = [];
 
     constructor(
-        fix: WayPoint,
+        fix: Waypoint,
         public readonly course: DegreesTrue,
         public readonly metadata: Readonly<LegMetadata>,
         segment: SegmentType,
@@ -72,8 +76,8 @@ export class CFLeg extends XFLeg {
         return Avionics.Utils.bearingDistanceToCoordinates(
             inverseCourse,
             distance,
-            this.fix.infos.coordinates.lat,
-            this.fix.infos.coordinates.long,
+            fixCoordinates(this.fix.location).lat,
+            fixCoordinates(this.fix.location).long,
         );
     }
 
