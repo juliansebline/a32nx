@@ -3,7 +3,11 @@
 //
 // SPDX-License-Identifier: GPL-3.0
 
-import { LegType, ProcedureLeg, TurnDirection } from 'msfs-navdata';
+import { LegType, ProcedureLeg, Runway, TurnDirection } from 'msfs-navdata';
+
+export function runwayIdent(runway: Runway) {
+    return runway.ident.substring(2);
+}
 
 export function procedureLegIdentAndAnnotation(procedureLeg: ProcedureLeg, procedureIdent?: string): [ident: string, annotation: string] {
     const legType = procedureLeg.type;

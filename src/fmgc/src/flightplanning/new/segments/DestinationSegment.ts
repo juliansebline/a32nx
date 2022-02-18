@@ -77,12 +77,6 @@ export class DestinationSegment extends FlightPlanSegment {
     private async refreshDestinationLegs() {
         this.allLegs.length = 0;
 
-        const planHasApproach = this.flightPlan.approachSegment.allLegs.length > 0;
-
-        if (planHasApproach) {
-            return;
-        }
-
         if (this.airport) {
             const approachName = this.flightPlan.approachSegment.approachProcedure?.ident ?? '';
 
@@ -95,6 +89,7 @@ export class DestinationSegment extends FlightPlanSegment {
     clone(forPlan: BaseFlightPlan): DestinationSegment {
         const newSegment = new DestinationSegment(forPlan);
 
+        newSegment.allLegs = [...this.allLegs];
         newSegment.airport = this.airport;
         newSegment.runway = this.runway;
 

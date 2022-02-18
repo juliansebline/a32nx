@@ -226,6 +226,9 @@ function geometryLegFromFlightPlanLeg(runningMagvar: Degrees, previousFlightPlan
     }
     case LegType.CR:
         break;
+    case LegType.HA:
+    case LegType.HF:
+    case LegType.HM:
     case LegType.DF: {
         const waypoint = flightPlanLeg.terminationWaypoint();
 
@@ -239,12 +242,12 @@ function geometryLegFromFlightPlanLeg(runningMagvar: Degrees, previousFlightPlan
         break;
         // case LegType.FM:
         //     break;
-    case LegType.HA:
-        break;
-    case LegType.HF:
-        break;
-    case LegType.HM:
-        break;
+    // case LegType.HA:
+    //     break;
+    // case LegType.HF:
+    //     break;
+    // case LegType.HM:
+    //     break;
     case LegType.IF: {
         const waypoint = flightPlanLeg.terminationWaypoint();
 

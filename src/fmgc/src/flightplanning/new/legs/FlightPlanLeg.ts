@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0
 
-import { Airport, LegType, ProcedureLeg, Runway, Waypoint, WaypointArea } from 'msfs-navdata';
+import { Airport, LegType, ProcedureLeg, Runway, Waypoint, WaypointArea, WaypointDescriptor } from 'msfs-navdata';
 import { FlightPlanLegDefinition } from '@fmgc/flightplanning/new/legs/FlightPlanLegDefinition';
 import { procedureLegIdentAndAnnotation } from '@fmgc/flightplanning/new/legs/FlightPlanLegNaming';
 import { WaypointFactory } from '@fmgc/flightplanning/new/waypoints/WaypointFactory';
@@ -80,7 +80,8 @@ export class FlightPlanLeg {
             return new FlightPlanLeg(segment, {
                 type: LegType.IF,
                 overfly: false,
-                waypoint: WaypointFactory.fromRunway(runway),
+                waypoint: WaypointFactory.fromAirportAndRunway(airport, runway),
+                waypointDescriptor: WaypointDescriptor.Runway,
                 magneticCourse: runway?.magneticBearing,
             }, `${airport.ident}${runway ? runway.ident.replace('RW', '') : ''}`, procedureIdent, undefined, undefined, false);
         }
@@ -89,6 +90,7 @@ export class FlightPlanLeg {
             type: LegType.IF,
             overfly: false,
             waypoint: { ...airport, area: WaypointArea.Terminal },
+            waypointDescriptor: WaypointDescriptor.Airport,
             magneticCourse: runway?.magneticBearing,
         }, `${airport.ident}${runway ? runway.ident.replace('RW', '') : ''}`, procedureIdent, undefined, undefined, false);
     }

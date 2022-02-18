@@ -3,7 +3,16 @@
 //
 // SPDX-License-Identifier: GPL-3.0
 
-import { Airport, Approach, Arrival, Departure, LegType, ProcedureTransition, Runway } from 'msfs-navdata';
+import {
+    Airport,
+    Approach,
+    Arrival,
+    Departure,
+    LegType,
+    ProcedureTransition,
+    Runway,
+    WaypointDescriptor
+} from 'msfs-navdata';
 import { OriginSegment } from '@fmgc/flightplanning/new/segments/OriginSegment';
 import { FlightPlanElement } from '@fmgc/flightplanning/new/legs/FlightPlanLeg';
 import { DepartureSegment } from '@fmgc/flightplanning/new/segments/DepartureSegment';
@@ -83,9 +92,17 @@ export abstract class BaseFlightPlan {
     }
 
     get destinationLeg() {
-        const index = this.destinationLegIndex;
+        return this.destinationSegment.allLegs[0];
+    }
 
-        return this.allLegs[index];
+    get endsAtRunway() {
+        if (this.approachSegment.allLegs.length === 0) {
+            return true;
+        }
+
+        const lastApproachLeg = this.approachSegment.allLegs[this.approachSegment.allLegs.length - 1];
+
+        return lastApproachLeg && lastApproachLeg.isDiscontinuity === false && lastApproachLeg.definition.waypointDescriptor === WaypointDescriptor.Runway;
     }
 
     get destinationLegIndex() {
@@ -130,7 +147,7 @@ export abstract class BaseFlightPlan {
                 ...this.arrivalRunwayTransitionSegment.allLegs,
                 ...this.approachViaSegment.allLegs,
                 ...this.approachSegment.allLegs,
-                ...this.destinationSegment.allLegs,
+                ...(this.endsAtRunway ? (this.destinationSegment.allLegs) : []),
                 ...this.missedApproachSegment.allLegs,
             ];
         }
@@ -543,6 +560,12 @@ export abstract class BaseFlightPlan {
             }
         }
 
+        if ( first instanceof ApproachSegment && second instanceof DestinationSegment) {
+            // Always string approach to destination
+            first.strung = true;
+            return;
+        }
+
         if ((first instanceof DestinationSegment || first instanceof ApproachSegment) && second instanceof MissedApproachSegment) {
             // Always string approach to missed
             first.strung = true;
@@ -574,6 +597,7 @@ export abstract class BaseFlightPlan {
         // If not matching leg is found, insert a discontinuity (if there isn't one already) at the end of the first segment
         if (cutBefore === -1) {
             if (lastElementInFirst.isDiscontinuity === false) {
+                debugger;
                 first.allLegs.push({ isDiscontinuity: true });
             }
 

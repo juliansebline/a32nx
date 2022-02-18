@@ -2237,7 +2237,7 @@ class FMCMainDisplay extends BaseAirliners {
                 }
             }
         } else {
-            if (this.ilsTakeoffAutoTuned || this.flightPlanManager.getCurrentFlightPlanIndex() !== 0) {
+            if (this.ilsTakeoffAutoTuned || (this.flightPlanService.hasActive && this.flightPlanService.active.activeLegIndex !== 0)) {
                 return;
             }
             this.ilsAutoTuned = false;

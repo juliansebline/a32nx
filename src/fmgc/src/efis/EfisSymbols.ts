@@ -340,7 +340,7 @@ export class EfisSymbols {
                         continue;
                     }
 
-                    if (wp.definition.waypointDescriptor === WaypointDescriptor.Airport) {
+                    if (wp.definition.waypointDescriptor === WaypointDescriptor.Airport || wp.definition.waypointDescriptor === WaypointDescriptor.Runway) {
                         // we pick these up later
                         continue;
                     }

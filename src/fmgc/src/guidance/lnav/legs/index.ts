@@ -144,6 +144,10 @@ export function isCourseReversalLeg(leg: Leg): boolean {
  * Geometry and vertical constraints applicable to a leg
  */
 export interface LegMetadata {
+    /**
+     * Definition of the originating flight plan leg
+     */
+    flightPlanLegDefinition: FlightPlanLegDefinition,
 
     /**
      * Turn direction constraint applicable to this leg
@@ -184,18 +188,6 @@ export interface LegMetadata {
 
 }
 
-export function legMetadataFromMsfsWaypoint(waypoint: WayPoint): LegMetadata {
-    const altitudeConstraint = getAltitudeConstraintFromWaypoint(waypoint);
-    const speedConstraint = getSpeedConstraintFromWaypoint(waypoint);
-
-    return {
-        turnDirection: waypoint.turnDirection,
-        altitudeConstraint,
-        speedConstraint,
-        isOverfly: waypoint.additionalData.overfly,
-    };
-}
-
 export function legMetadataFromFlightPlanLeg(leg: FlightPlanLeg): LegMetadata {
     const altitudeConstraint = altitudeConstraintFromFlightPlanLeg(leg.definition);
     const speedConstraint = speedConstraintFromProcedureLeg(leg.definition);
@@ -208,6 +200,7 @@ export function legMetadataFromFlightPlanLeg(leg: FlightPlanLeg): LegMetadata {
     }
 
     return {
+        flightPlanLegDefinition: leg.definition,
         turnDirection,
         altitudeConstraint,
         speedConstraint,

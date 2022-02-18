@@ -12,7 +12,7 @@ import { PathVector } from '@fmgc/guidance/lnav/PathVector';
 import { Leg } from '@fmgc/guidance/lnav/legs/Leg';
 import { Transition } from '@fmgc/guidance/lnav/Transition';
 import { LegMetadata } from '@fmgc/guidance/lnav/legs/index';
-import { Waypoint } from 'msfs-navdata';
+import { Waypoint, WaypointDescriptor } from 'msfs-navdata';
 import { fixCoordinates } from '@fmgc/flightplanning/new/utils';
 
 export class IFLeg extends XFLeg {
@@ -24,6 +24,11 @@ export class IFLeg extends XFLeg {
         super(fix);
 
         this.segment = segment;
+
+        // Do not display on map if this is an airport or runway leg
+        const { waypointDescriptor } = this.metadata.flightPlanLegDefinition;
+
+        this.displayedOnMap = waypointDescriptor !== WaypointDescriptor.Airport && waypointDescriptor !== WaypointDescriptor.Runway;
     }
 
     get predictedPath(): PathVector[] | undefined {

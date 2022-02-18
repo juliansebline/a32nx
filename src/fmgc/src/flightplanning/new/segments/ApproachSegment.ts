@@ -79,14 +79,18 @@ export class ApproachSegment extends FlightPlanSegment {
             legs.push(cf);
             legs.push(FlightPlanLeg.fromAirportAndRunway(this, '', airport, runway));
         } else {
-            legs.push(...approachLegs.slice(0, approachLegs.length - 1));
-
             const lastLeg = approachLegs[approachLegs.length - 1];
 
-            if (lastLeg?.isDiscontinuity === false && lastLeg.waypointDescriptor === WaypointDescriptor.Runway) {
-                const mappedLeg = FlightPlanLeg.fromAirportAndRunway(this, this.approachProcedure?.ident ?? '', airport, runway);
+            if (lastLeg && lastLeg.isDiscontinuity === false && lastLeg.waypointDescriptor === WaypointDescriptor.Runway) {
+                legs.push(...approachLegs.slice(0, approachLegs.length - 1));
 
-                legs.push(mappedLeg);
+                if (lastLeg?.isDiscontinuity === false && lastLeg.waypointDescriptor === WaypointDescriptor.Runway) {
+                    const mappedLeg = FlightPlanLeg.fromAirportAndRunway(this, this.approachProcedure?.ident ?? '', airport, runway);
+
+                    legs.push(mappedLeg);
+                }
+            } else {
+                legs.push(...approachLegs);
             }
         }
 
