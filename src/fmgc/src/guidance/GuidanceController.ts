@@ -166,11 +166,12 @@ export class GuidanceController {
 
     private updateEfisApproachMessage() {
         let apprMsg = '';
-        const appr = this.flightPlanManager.getApproach(FlightPlans.Active);
+        // const appr = this.flightPlanManager.getApproach(FlightPlans.Active);
+        const appr = FlightPlanService.active.approach;
         if (appr) {
             const phase = getFlightPhaseManager().phase;
-            if (phase > FmgcFlightPhase.Cruise || (phase === FmgcFlightPhase.Cruise && this.flightPlanManager.getDistanceToDestination(FlightPlans.Active) < 250)) {
-                apprMsg = normaliseApproachName(appr.name);
+            if (phase > FmgcFlightPhase.Cruise || (phase === FmgcFlightPhase.Cruise /* && this.flightPlanManager.getDistanceToDestination(FlightPlans.Active) < 250) */)) {
+                apprMsg = normaliseApproachName(appr.ident);
             }
         }
 
@@ -265,6 +266,9 @@ export class GuidanceController {
                 //     this.pseudoWaypoints.acceptMultipleLegGeometry(this.activeGeometry);
                 // }
             }
+        } catch (e) {
+            console.error('[FMS] Error during LNAV update. See exception below.');
+            console.error(e);
         }
 
         try {

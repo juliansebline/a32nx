@@ -34,7 +34,6 @@ export {
     FlightPlanIndex,
     getFlightPhaseManager,
     FlightPlanManager,
-    ManagedFlightPlan,
     FlightPlanAsoboSync,
     GuidanceManager,
     GuidanceController,

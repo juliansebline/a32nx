@@ -50,12 +50,10 @@ export class Geometry {
          */
         public legs: Map<number, Leg>,
 
-    private listener = RegisterViewListener('JS_LISTENER_SIMVARS', null, true);
+        private temp: boolean,
+    ) {}
 
-    constructor(transitions: Map<number, Transition>, legs: Map<number, Leg>, private temp: boolean) {
-        this.transitions = transitions;
-        this.legs = legs;
-    }
+    private listener = RegisterViewListener('JS_LISTENER_SIMVARS', null, true);
 
     public isComputed = false;
 

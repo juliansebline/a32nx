@@ -40,7 +40,7 @@ export class Geo {
         let legStartReference;
 
         if (leg instanceof TFLeg) {
-            legStartReference = fixCoordinatesleg.from.location);
+            legStartReference = fixCoordinates(leg.from.location);
         } else {
             legStartReference = leg.getPathStartPoint();
         }
