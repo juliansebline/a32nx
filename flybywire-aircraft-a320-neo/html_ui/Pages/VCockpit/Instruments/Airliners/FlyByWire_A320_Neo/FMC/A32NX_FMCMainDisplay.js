@@ -1354,7 +1354,7 @@ class FMCMainDisplay extends BaseAirliners {
         } else {
             this.approachSpeeds = new NXSpeedsApp(weight, this.perfApprFlaps3);
         }
-        this.approachSpeeds.valid = this.flightPlanManager.phase >= FmgcFlightPhases.APPROACH || isFinite(weight);
+        this.approachSpeeds.valid = this.flightPhaseManager.phase >= FmgcFlightPhases.APPROACH || isFinite(weight);
     }
 
     updateConstraints() {

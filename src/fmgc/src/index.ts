@@ -6,7 +6,7 @@
 import { FlightPlanService } from './flightplanning/new/FlightPlanService';
 import { NavigationDatabase, NavigationDatabaseBackend } from './NavigationDatabase';
 import { FlightPlanManager } from './flightplanning/FlightPlanManager';
-import { getFlightPhaseManager } from './flightphase';
+import { FlightPhaseManager, getFlightPhaseManager } from './flightphase';
 import { FlightPlanAsoboSync } from './flightplanning/FlightPlanAsoboSync';
 import { GuidanceManager } from './guidance/GuidanceManager';
 import { GuidanceController } from './guidance/GuidanceController';
@@ -32,6 +32,7 @@ export {
     NavigationDatabase,
     NavigationDatabaseBackend,
     FlightPlanIndex,
+    FlightPhaseManager,
     getFlightPhaseManager,
     FlightPlanManager,
     FlightPlanAsoboSync,

@@ -354,7 +354,7 @@ export class GuidanceController {
         if (this.activeGeometry) {
             GeometryFactory.updateFromFlightPlan(this.activeGeometry, FlightPlanService.active);
         } else {
-            this.activeGeometry = GeometryFactory.createFromFlightPlan(FlightPlanService.active, this.viewListener);
+            this.activeGeometry = GeometryFactory.createFromFlightPlan(FlightPlanService.active);
         }
     }
 
@@ -362,7 +362,7 @@ export class GuidanceController {
         if (this.temporaryGeometry) {
             GeometryFactory.updateFromFlightPlan(this.temporaryGeometry, FlightPlanService.temporary);
         } else {
-            this.temporaryGeometry = GeometryFactory.createFromFlightPlan(FlightPlanService.temporary, this.viewListener);
+            this.temporaryGeometry = GeometryFactory.createFromFlightPlan(FlightPlanService.temporary);
         }
     }
 
@@ -370,7 +370,7 @@ export class GuidanceController {
         if (this.secondaryGeometry) {
             GeometryFactory.updateFromFlightPlan(this.secondaryGeometry, FlightPlanService.secondary(1), false);
         } else {
-            this.secondaryGeometry = GeometryFactory.createFromFlightPlan(FlightPlanService.secondary(1), this.viewListener, false);
+            this.secondaryGeometry = GeometryFactory.createFromFlightPlan(FlightPlanService.secondary(1), false);
         }
     }
 

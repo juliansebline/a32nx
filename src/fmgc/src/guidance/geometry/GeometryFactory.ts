@@ -3,7 +3,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0
 
-import { Geometry, LnavConfig } from '@fmgc/guidance';
+import { Geometry } from '@fmgc/guidance/Geometry';
+import { LnavConfig } from '@fmgc/guidance/LnavConfig';
 import { BaseFlightPlan } from '@fmgc/flightplanning/new/plans/BaseFlightPlan';
 import { Leg } from '@fmgc/guidance/lnav/legs/Leg';
 import { Transition } from '@fmgc/guidance/lnav/Transition';
@@ -25,7 +26,7 @@ import { VMLeg } from '@fmgc/guidance/lnav/legs/VM';
 import { RFLeg } from '@fmgc/guidance/lnav/legs/RF';
 
 export namespace GeometryFactory {
-    export function createFromFlightPlan(plan: BaseFlightPlan, viewListener: ViewListener.ViewListener, doGenerateTransitions = true): Geometry {
+    export function createFromFlightPlan(plan: BaseFlightPlan, doGenerateTransitions = true): Geometry {
         const legs = new Map<number, Leg>();
         const transitions = new Map<number, Transition>();
 
@@ -65,7 +66,7 @@ export namespace GeometryFactory {
             legs.set(i, geometryLeg);
         }
 
-        return new Geometry(transitions, legs, viewListener);
+        return new Geometry(transitions, legs, false);
     }
 
     export function updateFromFlightPlan(geometry: Geometry, flightPlan: BaseFlightPlan, doGenerateTransitions = true) {

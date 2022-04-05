@@ -5,11 +5,7 @@ import React, { FC, memo } from 'react';
 import { MathUtils } from '@shared/MathUtils';
 import { Layer } from '@instruments/common/utils';
 import { useSimVar } from '@instruments/common/simVars';
-import { TFLeg } from '@fmgc/guidance/lnav/legs/TF';
-import { VMLeg } from '@fmgc/guidance/lnav/legs/VM';
 import { EfisSide, EfisVectorsGroup, NdSymbol, NdSymbolTypeFlags } from '@shared/NavigationDisplay';
-import { Leg } from '@fmgc/guidance/lnav/legs/Leg';
-import { HALeg, HFLeg, HMLeg, HxLegGuidanceState } from '@fmgc/guidance/lnav/legs/HX';
 import { MapParameters } from '../utils/MapParameters';
 import { FlightPlanVectors } from './FlightPlanVectors';
 

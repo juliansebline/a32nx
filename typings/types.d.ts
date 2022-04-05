@@ -59,6 +59,8 @@ declare global {
         const FlightPlanIndex: typeof Index
 
         const FlightPhaseManager: typeof FlightPhaseManager_
+
+        function getFlightPhaseManager(): FlightPhaseManager_
     }
 }
 
