@@ -104,6 +104,10 @@ export class GuidanceController {
 
         const focusedWpIndex = SimVar.GetSimVarValue('L:A32NX_SELECTED_WAYPOINT', 'number');
 
+        if (!FlightPlanService.active.hasElement(focusedWpIndex)) {
+            return;
+        }
+
         const matchingLeg = FlightPlanService.active.elementAt(focusedWpIndex);
 
         if (!matchingLeg || matchingLeg.isDiscontinuity === true || !matchingLeg.isXf()) {

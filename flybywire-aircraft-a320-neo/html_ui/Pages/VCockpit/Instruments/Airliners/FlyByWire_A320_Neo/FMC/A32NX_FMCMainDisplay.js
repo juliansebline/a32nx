@@ -550,11 +550,11 @@ class FMCMainDisplay extends BaseAirliners {
     onUpdate(_deltaTime) {
         super.onUpdate(_deltaTime);
 
-        this.flightPlanManager.update(_deltaTime);
-        const flightPlanChanged = this.flightPlanManager.currentFlightPlanVersion !== this.lastFlightPlanVersion;
-        if (flightPlanChanged) {
-            this.lastFlightPlanVersion = this.flightPlanManager.currentFlightPlanVersion;
-        }
+        // this.flightPlanManager.update(_deltaTime);
+        // const flightPlanChanged = this.flightPlanService.version.currentFlightPlanVersion !== this.lastFlightPlanVersion;
+        // if (flightPlanChanged) {
+        //     this.lastFlightPlanVersion = this.flightPlanManager.currentFlightPlanVersion;
+        // }
 
         Fmgc.updateFmgcLoop(_deltaTime);
 
@@ -565,12 +565,12 @@ class FMCMainDisplay extends BaseAirliners {
         if (flightPhaseManagerDelta !== -1) {
             this.flightPhaseManager.shouldActivateNextPhase(flightPhaseManagerDelta);
         }
-        this._checkFlightPlan--;
-        if (this._checkFlightPlan <= 0) {
-            this._checkFlightPlan = 120;
-            this.flightPlanManager.updateFlightPlan();
-            this.flightPlanManager.updateCurrentApproach();
-        }
+        // this._checkFlightPlan--;
+        // if (this._checkFlightPlan <= 0) {
+        //     this._checkFlightPlan = 120;
+        //     this.flightPlanManager.updateFlightPlan();
+        //     this.flightPlanManager.updateCurrentApproach();
+        // }
 
         if (this.fmsUpdateThrottler.canUpdate(_deltaTime) !== -1) {
             this.updateRadioNavState();
@@ -579,9 +579,10 @@ class FMCMainDisplay extends BaseAirliners {
 
         this.A32NXCore.update();
 
-        if (flightPlanChanged) {
-            this.updateManagedProfile();
-        }
+        // replaced by bbk vnav
+        // if (flightPlanChanged) {
+        //     this.updateManagedProfile();
+        // }
 
         this.updateAutopilot();
 
@@ -1358,6 +1359,9 @@ class FMCMainDisplay extends BaseAirliners {
     }
 
     updateConstraints() {
+        // TODO
+        return;
+
         const activeFpIndex = this.flightPlanManager.getActiveWaypointIndex();
         const constraints = this.managedProfile.get(activeFpIndex);
         const fcuSelAlt = Simplane.getAutoPilotDisplayedAltitudeLockValue("feet");

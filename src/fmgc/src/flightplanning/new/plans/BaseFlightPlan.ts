@@ -11,7 +11,7 @@ import {
     LegType,
     ProcedureTransition,
     Runway,
-    WaypointDescriptor
+    WaypointDescriptor,
 } from 'msfs-navdata';
 import { OriginSegment } from '@fmgc/flightplanning/new/segments/OriginSegment';
 import { FlightPlanElement } from '@fmgc/flightplanning/new/legs/FlightPlanLeg';
@@ -116,6 +116,10 @@ export abstract class BaseFlightPlan {
         }
 
         return accumulator - 1;
+    }
+
+    hasElement(index: number): boolean {
+        return index >= 0 && index <= this.allLegs.length;
     }
 
     elementAt(index: number): FlightPlanElement {
@@ -560,7 +564,7 @@ export abstract class BaseFlightPlan {
             }
         }
 
-        if ( first instanceof ApproachSegment && second instanceof DestinationSegment) {
+        if (first instanceof ApproachSegment && second instanceof DestinationSegment) {
             // Always string approach to destination
             first.strung = true;
             return;

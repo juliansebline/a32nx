@@ -87,6 +87,10 @@ export class EfisSymbols {
         // FIXME map reference point should be per side
         const planCentreIndex = SimVar.GetSimVarValue('L:A32NX_SELECTED_WAYPOINT', 'number');
 
+        if (!FlightPlanService.active.hasElement(planCentreIndex)) {
+            return;
+        }
+
         let planCentre = FlightPlanService.active.elementAt(planCentreIndex);
 
         if (planCentre.isDiscontinuity === true) {
