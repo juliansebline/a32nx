@@ -168,6 +168,11 @@ export class ConstraintReader {
         const { legs, transitions } = geometry;
 
         const leg = legs.get(index);
+
+        if (leg.isNull) {
+            return;
+        }
+
         const inboundTransition = transitions.get(index - 1);
         const outboundTransition = transitions.get(index);
 
