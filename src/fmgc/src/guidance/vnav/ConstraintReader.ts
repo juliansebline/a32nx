@@ -1,13 +1,10 @@
-import { SegmentType } from '@fmgc/flightplanning/FlightPlanSegment';
 import { FlightPlanManager } from '@fmgc/wtsdk';
 import { Leg } from '@fmgc/guidance/lnav/legs/Leg';
 import { ApproachPathAngleConstraint, DescentAltitudeConstraint, MaxAltitudeConstraint, MaxSpeedConstraint } from '@fmgc/guidance/vnav/profile/NavGeometryProfile';
 import { Geometry } from '@fmgc/guidance/Geometry';
 import { AltitudeConstraintType, SpeedConstraintType } from '@fmgc/guidance/lnav/legs';
-
-type UncategorizedAltitudeConstraint = DescentAltitudeConstraint;
-
-type UncategorizedSpeedConstraint = MaxSpeedConstraint;
+import { FlightPlans, WaypointConstraintType } from '@fmgc/flightplanning/FlightPlanManager';
+import { AltitudeDescriptor } from '@fmgc/types/fstypes/FSEnums';
 
 export class ConstraintReader {
     public climbAlitudeConstraints: MaxAltitudeConstraint[] = [];
@@ -31,19 +28,59 @@ export class ConstraintReader {
     extract(geometry: Geometry, activeLegIndex: number, activeTransIndex: number, ppos: LatLongAlt) {
         this.reset();
 
-        const uncategorizedAltitudeConstraints: UncategorizedAltitudeConstraint[] = [];
-        const uncategorizedSpeedConstraints: UncategorizedSpeedConstraint[] = [];
+        // We use these to keep track of constraints that have already been passed, yet should still be taken into account
+        let maxDescentSpeed = Infinity;
+        let maxDescentAltitude = Infinity;
 
-        for (let i = 0; i < this.flightPlanManager.getWaypointsCount(); i++) {
+        for (let i = 0; i < this.flightPlanManager.getWaypointsCount(FlightPlans.Active); i++) {
             const leg = geometry.legs.get(i);
+            this.updateDistanceFromStart(i, geometry, activeLegIndex, activeTransIndex, ppos);
 
+            const waypoint = this.flightPlanManager.getWaypoint(i, FlightPlans.Active);
+            if (i < activeLegIndex - 1) {
+                if (waypoint.additionalData.constraintType === WaypointConstraintType.DES /* DES */) {
+                    if (waypoint.speedConstraint > 100) {
+                        maxDescentSpeed = Math.min(maxDescentSpeed, waypoint.speedConstraint);
+                    }
+
+                    switch (waypoint.legAltitudeDescription) {
+                    case AltitudeDescriptor.At:
+                    case AltitudeDescriptor.AtOrBelow:
+                    case AltitudeDescriptor.Between:
+                        maxDescentAltitude = Math.min(maxDescentAltitude, Math.round(waypoint.legAltitude1));
+                        break;
+                    default:
+                        // not constraining
+                    }
+                }
+
+                continue;
+            } if (i === activeLegIndex - 1) {
+                if (maxDescentSpeed < Infinity) {
+                    this.descentSpeedConstraints.push({
+                        distanceFromStart: 0,
+                        maxSpeed: maxDescentSpeed,
+                    });
+                }
+
+                if (maxDescentAltitude < Infinity) {
+                    this.descentAltitudeConstraints.push({
+                        distanceFromStart: 0,
+                        constraint: {
+                            type: AltitudeConstraintType.atOrBelow,
+                            altitude1: maxDescentAltitude,
+                            altitude2: undefined,
+                        },
+                    });
+                }
+            }
+
+            // I think this is only hit for manual discontinuities
             if (!leg) {
                 continue;
             }
 
-            this.updateDistanceFromStart(i, geometry, activeLegIndex, activeTransIndex, ppos);
-
-            if (leg.segment === SegmentType.Origin || leg.segment === SegmentType.Departure) {
+            if (waypoint.additionalData.constraintType === WaypointConstraintType.CLB) {
                 if (this.hasValidClimbAltitudeConstraint(leg)) {
                     this.climbAlitudeConstraints.push({
                         distanceFromStart: this.totalFlightPlanDistance,
@@ -57,7 +94,7 @@ export class ConstraintReader {
                         maxSpeed: leg.metadata.speedConstraint.speed,
                     });
                 }
-            } else if (leg.segment === SegmentType.Arrival || leg.segment === SegmentType.Approach) {
+            } else if (waypoint.additionalData.constraintType === WaypointConstraintType.DES) {
                 if (this.hasValidDescentAltitudeConstraint(leg)) {
                     this.descentAltitudeConstraints.push({
                         distanceFromStart: this.totalFlightPlanDistance,
@@ -78,38 +115,6 @@ export class ConstraintReader {
                         pathAngle: leg.metadata.pathAngleConstraint,
                     });
                 }
-            } else if (leg.metadata.altitudeConstraint) {
-                uncategorizedAltitudeConstraints.push({
-                    distanceFromStart: this.totalFlightPlanDistance,
-                    constraint: leg.metadata.altitudeConstraint,
-                });
-            } else if (this.hasValidSpeedConstraint(leg)) {
-                uncategorizedSpeedConstraints.push({
-                    distanceFromStart: this.totalFlightPlanDistance,
-                    maxSpeed: leg.metadata.speedConstraint.speed,
-                });
-            }
-        }
-
-        for (const uncategorizedAltitudeConstraint of uncategorizedAltitudeConstraints) {
-            if (uncategorizedAltitudeConstraint.distanceFromStart < this.totalFlightPlanDistance / 2) {
-                this.climbAlitudeConstraints.push({
-                    distanceFromStart: uncategorizedAltitudeConstraint.distanceFromStart,
-                    maxAltitude: uncategorizedAltitudeConstraint.constraint.altitude1,
-                });
-            } else {
-                this.descentAltitudeConstraints.push({
-                    distanceFromStart: uncategorizedAltitudeConstraint.distanceFromStart,
-                    constraint: uncategorizedAltitudeConstraint.constraint,
-                });
-            }
-        }
-
-        for (const uncategorizedSpeedConstraint of uncategorizedSpeedConstraints) {
-            if (uncategorizedSpeedConstraint.distanceFromStart < this.totalFlightPlanDistance / 2) {
-                this.climbSpeedConstraints.push(uncategorizedSpeedConstraint);
-            } else {
-                this.descentSpeedConstraints.push(uncategorizedSpeedConstraint);
             }
         }
     }
@@ -169,7 +174,7 @@ export class ConstraintReader {
 
         const leg = legs.get(index);
 
-        if (leg.isNull) {
+        if (!leg || leg.isNull) {
             return;
         }
 
