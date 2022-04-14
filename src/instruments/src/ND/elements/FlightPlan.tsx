@@ -314,9 +314,9 @@ export const SymbolMarker: FC<SymbolMarkerProps> = memo(({ ident, x, y, endX, en
     }
 
     if (constraints) {
-        let constraintY = 20;
+        let constraintY = 17;
         elements.push(...constraints.map((t) => (
-            <text x={15} y={constraintY += 17} className="Magenta shadow" fontSize={20}>{t}</text>
+            <text x={13.5} y={constraintY += 17} className="shadow Magenta" fontSize={20}>{t}</text>
         )));
     }
 
@@ -400,7 +400,7 @@ export const SymbolMarker: FC<SymbolMarkerProps> = memo(({ ident, x, y, endX, en
                 <circle cx={0} cy={0} r={12} strokeWidth={1.8} className="shadow" />
                 <circle cx={0} cy={0} r={12} strokeWidth={1.5} className="White" />
 
-                <text x={2.5} y={2} className="White shadow" textAnchor="middle" dominantBaseline="middle" fontSize={21}>1</text>
+                <text x={2.5} y={2} className="shadow White" textAnchor="middle" dominantBaseline="middle" fontSize={21}>1</text>
             </>,
         );
     } else if (type & (NdSymbolTypeFlags.PwpCdaFlap2)) {
@@ -410,7 +410,7 @@ export const SymbolMarker: FC<SymbolMarkerProps> = memo(({ ident, x, y, endX, en
                 <circle cx={0} cy={0} r={12} strokeWidth={1.8} className="shadow" />
                 <circle cx={0} cy={0} r={12} strokeWidth={1.5} className="White" />
 
-                <text x={1} y={2} className="White shadow" textAnchor="middle" dominantBaseline="middle" fontSize={21}>2</text>
+                <text x={1} y={2} className="shadow White" textAnchor="middle" dominantBaseline="middle" fontSize={21}>2</text>
             </>,
         );
     } else if (type & (NdSymbolTypeFlags.PwpDecel)) {
@@ -477,7 +477,7 @@ export const SymbolMarker: FC<SymbolMarkerProps> = memo(({ ident, x, y, endX, en
 
     if (showIdent) {
         elements.push(
-            <text x={15} y={20 + identYOffset} fontSize={20} className={`${colour}${shadow ? ' shadow' : ''}`}>
+            <text x={13.5} y={17 + identYOffset} fontSize={20} className={`${colour}${shadow ? ' shadow' : ''}`}>
                 {ident}
             </text>,
         );
@@ -498,8 +498,8 @@ interface ConstraintMarkerProps {
 
 export const ConstraintMarker: FC<ConstraintMarkerProps> = memo(({ x, y, type }) => (
     <Layer x={x} y={y}>
-        <circle r={12} className="shadow" strokeWidth={2.5} />
-        <circle r={12} className={typeFlagToColor(type)} strokeWidth={2} />
+        <circle r={14} className="shadow" strokeWidth={2.5} />
+        <circle r={14} className={typeFlagToColor(type)} strokeWidth={2} />
     </Layer>
 ));
 
