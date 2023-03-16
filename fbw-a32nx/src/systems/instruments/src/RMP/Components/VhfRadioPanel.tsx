@@ -2,7 +2,6 @@ import React from 'react';
 import { StandbyFrequency, TransceiverType } from './StandbyFrequency';
 import { useSplitSimVar } from '../../Common/simVars';
 import { RadioPanelDisplay } from './RadioPanelDisplay';
-import { useInteractionEvent } from '../../Common/hooks';
 
 interface Props {
     /**
@@ -47,7 +46,8 @@ const useStandbyVhfFrequency = (side: string, transceiver: number) => {
         variableWriteName = variableReadName;
     }
 
-    return useSplitSimVar(variableReadName, 'Hz', variableWriteName, 'Hz', 100);
+    // return useSplitSimVar(variableReadName, 'Hz', variableWriteName, 'Hz', 100);
+    return [variableReadName, variableWriteName];
 };
 
 /**
@@ -58,23 +58,16 @@ const useStandbyVhfFrequency = (side: string, transceiver: number) => {
 export const VhfRadioPanel = (props: Props) => {
     const [active, setActive] = useActiveVhfFrequency(props.vhf);
     const [standby, setStandby] = useStandbyVhfFrequency(props.side, props.vhf);
-    const [, setValueOppositePanelStandby] = props.side === 'L' ? useStandbyVhfFrequency('R', 3) : useStandbyVhfFrequency('L', 3);
+    // const [, setValueOppositePanelStandby] = props.side === 'L' ? useStandbyVhfFrequency('R', 3) : useStandbyVhfFrequency('L', 3);
 
-    // Handle Transfer Button Pressed.
-    useInteractionEvent(`A32NX_RMP_${props.side}_TRANSFER_BUTTON_PRESSED`, () => {
-        // Force the standby opposite side otherwise we would lose the frequency/data format
-        // Otherwise it would become frequency/frequency
-        if (props.vhf === 3) {
-            setValueOppositePanelStandby(active);
-        }
-        setActive(standby);
-        setStandby(active);
-    });
+    console.log(`VhfRadioPanel IN ${standby}`);
+
+    console.log(`VhfRadioPanel OUT ${standby}`);
 
     return (
         <span>
             <RadioPanelDisplay value={active} />
-            <StandbyFrequency side={props.side} value={standby} setValue={setStandby} transceiver={TransceiverType.RADIO_VHF} />
+            <StandbyFrequency side={props.side} setActive={setActive} varGetStandby={standby} varSetStandby={setStandby} transceiver={TransceiverType.RADIO_VHF} />
         </span>
     );
 };

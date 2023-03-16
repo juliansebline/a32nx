@@ -1,8 +1,11 @@
-import React, { useCallback, useRef } from 'react';
+// import React, { useCallback, useRef } from 'react';
 import { usePersistentProperty } from '@instruments/common/persistence';
+import React from 'react';
 import { RadioPanelDisplay } from './RadioPanelDisplay';
 import { useInteractionEvent } from '../../Common/hooks';
-import { RateMultiplierKnob, UpdateValueCallback } from '../../Common/RateMultiplierKnob';
+import { useSplitSimVar } from '../../Common/simVars';
+
+// import { RateMultiplierKnob, UpdateValueCallback } from '../../Common/RateMultiplierKnob';
 
 declare const Utils; // this can also be replaced once /typings are available
 
@@ -22,17 +25,23 @@ interface Props {
     /**
      * The current standby frequency value in Hz.
      */
-    value: number,
+    value?: number,
 
     /**
      * Type of transceiver (e.g VHF, HF, VOR, ILS, MLS, ADF)
      */
     transceiver: TransceiverType,
 
-    /**
-     * A callback to set the current standby frequency value in Hz.
-     */
-    setValue: (x: any) => void,
+    varSetStandby: string,
+
+    varGetStandby: string,
+
+    setActive: any,
+
+    // /**
+    //  * A callback to set the current standby frequency value in Hz.
+    //  */
+    // setValue: (x: any) => void,
 }
 
 /**
@@ -107,12 +116,74 @@ const offsetFrequencyChannel = (spacing: ChannelSpacing, channel: number, offset
     return ((newChannel % 1000) + 1000) % 1000;
 };
 
+const outerKnobUpdateCallback = (value: number, spacing: ChannelSpacing, offset: number, toMhz: number, transceiver: number): number => {
+    console.log('outer');
+    if (value !== 0) {
+        let frequency = value;
+
+        if (transceiver !== TransceiverType.ADF) {
+            frequency = Math.round(frequency / 1000); // To kHz
+        }
+
+        const integer = Math.floor(frequency / 1000) + offset;
+
+        // @todo determine min/max depending on mode.
+        let newInteger = 0;
+        if (transceiver === TransceiverType.RADIO_VHF) {
+            newInteger = Utils.Clamp(integer, 118, 136);
+        } else if (transceiver === TransceiverType.ILS) {
+            newInteger = Utils.Clamp(integer, 108, 111);
+        } else if (transceiver === TransceiverType.VOR) {
+            newInteger = Utils.Clamp(integer, 108, 117);
+        } else if (transceiver === TransceiverType.ADF) {
+            newInteger = Utils.Clamp(integer, 190, 1750);
+        }
+
+        value = (newInteger * 1000 + frequency % 1000) * toMhz;
+    }
+
+    return value;
+};
+
+// Handle inner knob turned.
+const innerKnobUpdateCallback = (value: number, spacing: ChannelSpacing, offset: number, toMhz: number, transceiver: number): number => {
+    console.log(`INNER IN ${value}`);
+    if (value !== 0) {
+        let frequency = value;
+
+        if (transceiver !== TransceiverType.ADF) {
+            frequency = Math.round(frequency / 1000); // To kHz
+        }
+
+        // Tested in real life:
+        // Integer cannot return to 118 from 136 to the right
+        // Decimal can return to 0 from 975 to the right
+        const integer = Math.floor(frequency / 1000);
+        let decimal = 0;
+
+        if (transceiver !== TransceiverType.ADF) {
+            decimal = offsetFrequencyChannel(spacing, frequency % 1000, offset);
+        } else { // offsetFrequencyChannel does not fit ADF needs
+            decimal = frequency % 1000 === 0 ? 500 : 0;
+        }
+
+        value = (integer * 1000 + decimal % 1000) * toMhz;
+    }
+
+    console.log(`INNER OUT ${value}`);
+
+    return value;
+};
+
 /**
  * Standby frequency radio management panel React component.
  * Hooks to outer and inner rotary encoder knobs.
  * Renders standby frequency RadioPanelDisplay sub-component.
  */
 export const StandbyFrequency = (props: Props) => {
+    const [standby, setStandby] = useSplitSimVar(props.varGetStandby, 'Hz', props.varSetStandby, 'Hz', 100);
+    let standbyTmp = standby;
+    console.log(`StandbyFrequency IN ${standbyTmp} ${props.side} ${props.transceiver} ${props.value}`);
     let spacing: ChannelSpacing;
     let toMhz = 1000;
 
@@ -130,74 +201,35 @@ export const StandbyFrequency = (props: Props) => {
         spacing = usePersistentProperty('RMP_VHF_SPACING_25KHZ', '0')[0] === '0' ? 8.33 : 25;
     }
 
-    // Handle outer knob turned.
-    const outerKnobUpdateCallback: UpdateValueCallback = useCallback((offset) => {
-        if (props.value !== 0) {
-            let frequency = props.value;
+    // Handle Transfer Button Pressed.
+    useInteractionEvent(`A32NX_RMP_${props.side}_TRANSFER_BUTTON_PRESSED`, () => {
+        // Force the standby opposite side otherwise we would lose the frequency/data format
+        // Otherwise it would become frequency/frequency
+        // if (props.vhf === 3) {
+        //     setValueOppositePanelStandby(active);
+        // }
+        // props.setActive(standby);
+        // setStandby(active);
+    });
 
-            if (props.transceiver !== TransceiverType.ADF) {
-                frequency = Math.round(frequency / 1000); // To kHz
-            }
+    useInteractionEvent(`A32NX_RMP_${props.side}_OUTER_KNOB_TURNED_CLOCKWISE`, () => {
+        standbyTmp = outerKnobUpdateCallback(standby, spacing, 1, toMhz, props.transceiver);
+        setStandby(standbyTmp);
+    });
+    useInteractionEvent(`A32NX_RMP_${props.side}_OUTER_KNOB_TURNED_ANTICLOCKWISE`, () => {
+        standbyTmp = outerKnobUpdateCallback(standby, spacing, -1, toMhz, props.transceiver);
+        setStandby(standbyTmp);
+    });
+    useInteractionEvent(`A32NX_RMP_${props.side}_INNER_KNOB_TURNED_CLOCKWISE`, () => {
+        standbyTmp = innerKnobUpdateCallback(standby, spacing, 1, toMhz, props.transceiver);
+        setStandby(standbyTmp);
+    });
+    useInteractionEvent(`A32NX_RMP_${props.side}_INNER_KNOB_TURNED_ANTICLOCKWISE`, () => {
+        standbyTmp = innerKnobUpdateCallback(standby, spacing, -1, toMhz, props.transceiver);
+        setStandby(standbyTmp);
+    });
 
-            const integer = Math.floor(frequency / 1000) + offset;
+    console.log(`StandbyFrequency OUT ${standbyTmp} ${props.side} ${props.transceiver} ${props.value}`);
 
-            // @todo determine min/max depending on mode.
-            let newInteger = 0;
-            if (props.transceiver === TransceiverType.RADIO_VHF) {
-                newInteger = Utils.Clamp(integer, 118, 136);
-            } else if (props.transceiver === TransceiverType.ILS) {
-                newInteger = Utils.Clamp(integer, 108, 111);
-            } else if (props.transceiver === TransceiverType.VOR) {
-                newInteger = Utils.Clamp(integer, 108, 117);
-            } else if (props.transceiver === TransceiverType.ADF) {
-                newInteger = Utils.Clamp(integer, 190, 1750);
-            }
-
-            props.setValue((newInteger * 1000 + frequency % 1000) * toMhz);
-        } else {
-            props.setValue(0);
-        }
-    }, [props.value]);
-
-    // Handle inner knob turned.
-    const innerKnobUpdateCallback: UpdateValueCallback = useCallback((offset) => {
-        if (props.value !== 0) {
-            let frequency = props.value;
-
-            if (props.transceiver !== TransceiverType.ADF) {
-                frequency = Math.round(frequency / 1000); // To kHz
-            }
-
-            // Tested in real life:
-            // Integer cannot return to 118 from 136 to the right
-            // Decimal can return to 0 from 975 to the right
-            const integer = Math.floor(frequency / 1000);
-            let decimal = 0;
-
-            if (props.transceiver !== TransceiverType.ADF) {
-                decimal = offsetFrequencyChannel(spacing, frequency % 1000, offset);
-            } else { // offsetFrequencyChannel does not fit ADF needs
-                decimal = frequency % 1000 === 0 ? 500 : 0;
-            }
-            props.setValue((integer * 1000 + decimal % 1000) * toMhz);
-        } else {
-            props.setValue(0);
-        }
-    }, [props.value]);
-
-    // Used to change integer value of freq.
-    const outerKnob = useRef(new RateMultiplierKnob());
-    outerKnob.current.updateValue = outerKnobUpdateCallback;
-
-    // Used to change decimal value of freq.
-    const innerKnob = useRef(new RateMultiplierKnob());
-    innerKnob.current.updateValue = innerKnobUpdateCallback;
-
-    // Hook rotation events from simulator to custom knob class methods.
-    useInteractionEvent(`A32NX_RMP_${props.side}_OUTER_KNOB_TURNED_CLOCKWISE`, () => outerKnob.current.increase());
-    useInteractionEvent(`A32NX_RMP_${props.side}_OUTER_KNOB_TURNED_ANTICLOCKWISE`, () => outerKnob.current.decrease());
-    useInteractionEvent(`A32NX_RMP_${props.side}_INNER_KNOB_TURNED_CLOCKWISE`, () => innerKnob.current.increase());
-    useInteractionEvent(`A32NX_RMP_${props.side}_INNER_KNOB_TURNED_ANTICLOCKWISE`, () => innerKnob.current.decrease());
-
-    return (<RadioPanelDisplay value={props.value} />);
+    return (<RadioPanelDisplay value={standbyTmp} />);
 };

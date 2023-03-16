@@ -38,6 +38,8 @@ export function RadioPanelDisplay(props: Props) {
 
     let content: JSX.Element;
 
+    console.log(`RadioPanelDisplay IN ${props.value}`);
+
     if (lightsTest === 0 && dc2IsPowered) {
         content = (
             <text x="100%" y="52%">
@@ -63,7 +65,7 @@ export function RadioPanelDisplay(props: Props) {
             </text>
         );
     }
-
+    console.log(`RadioPanelDisplay OUT ${props.value}`);
     return (
         <svg className="rmp-svg">
             {content}

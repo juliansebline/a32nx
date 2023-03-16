@@ -35,6 +35,7 @@ export class RateMultiplierKnob {
      * If called within the timeout, the offset is steadily increased too.
      */
     increase() {
+        console.log('Increase outer');
         if (this.currentSpeed < 1 || (Date.now() - this.previousTimestamp) > this.timeout) {
             this.currentSpeed = 1;
         } else {
