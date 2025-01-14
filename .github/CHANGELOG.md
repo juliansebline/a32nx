@@ -122,6 +122,7 @@
 1. [A380X/MFD] Add ATCCOM D-ATIS page layout - @heclak (Heclak)
 1. [A380X/FMS] Enable FMC reset through overhead reset panel push buttons - @flogross89 (floridude)
 1. [A380X/FCU] Add TRUE indication on FCU when TRUE North reference is selected on AFS CP - @heclak (Heclak)
+1. [A32NX/COMMS] Enabled all components of communications panels with Rust - @Julian [Z+2 fr en esp]#8476 (Julian Sebline)
 
 ## 0.12.0
 
