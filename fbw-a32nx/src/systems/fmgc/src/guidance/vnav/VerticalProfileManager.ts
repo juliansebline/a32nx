@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 // Copyright (c) 2021-2023 FlyByWire Simulations
 //
 // SPDX-License-Identifier: GPL-3.0
@@ -724,7 +725,7 @@ export class VerticalProfileManager {
    * This is naturally the case because the descent profile and the "starting point" is not updated during descent.
    * @returns Offset between the aircraft's distance from start and the descent profile's distance from start
    */
-  private computeTacticalToGuidanceProfileOffset(): NauticalMiles {
+  public computeTacticalToGuidanceProfileOffset(): NauticalMiles {
     if (!this.descentProfile || !this.aircraftToDescentProfileRelation?.isValid) {
       return 0;
     }
@@ -753,7 +754,7 @@ export class VerticalProfileManager {
     const isDesOrApprPhase = flightPhase === FmgcFlightPhase.Descent || flightPhase === FmgcFlightPhase.Approach;
     const isCruisePhase = flightPhase === FmgcFlightPhase.Cruise;
     const isCloseToDestination =
-      ((this.constraintReader.distanceToEnd ?? Infinity) > 150 && isCruisePhase) || isDesOrApprPhase;
+      ((this.constraintReader.distanceToEnd ?? Infinity) < 150 && isCruisePhase) || isDesOrApprPhase;
 
     if (!isManagedLateralMode || !isCloseToDestination) {
       return false;

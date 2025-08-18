@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 // Copyright (c) 2021-2022 FlyByWire Simulations
 // Copyright (c) 2021-2022 Synaptic Simulations
 //
@@ -212,7 +213,6 @@ export class EfisVectors {
     // ACTIVE
 
     const geometry = this.guidanceController.getGeometryForFlightPlan(plan.index);
-
     const vectors = geometry.getAllPathVectors(plan.activeLegIndex).filter((it) => EfisVectors.isVectorReasonable(it));
 
     // ACTIVE missed

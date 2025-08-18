@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 //  Copyright (c) 2023 FlyByWire Simulations
 //  SPDX-License-Identifier: GPL-3.0
 
@@ -256,6 +257,10 @@ export class VnavDriver implements GuidanceComponent {
 
   get expediteProfile(): BaseGeometryProfile | undefined {
     return this.profileManager.expediteProfile;
+  }
+
+  get descentProfile(): BaseGeometryProfile | undefined {
+    return this.profileManager.descentProfile;
   }
 
   private updateDescentSpeedGuidance() {
@@ -650,6 +655,10 @@ export class VnavDriver implements GuidanceComponent {
 
   shouldShowTooSteepPathAhead(): boolean {
     return this.profileManager.shouldShowTooSteepPathAhead();
+  }
+
+  public computeTacticalToGuidanceProfileOffset(): NauticalMiles {
+    return this.profileManager.computeTacticalToGuidanceProfileOffset();
   }
 }
 

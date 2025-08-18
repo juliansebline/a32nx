@@ -5,6 +5,7 @@ import {
   MappedSubject,
   SimVarValueType,
   Subject,
+  SubscribableMapFunctions,
   Subscription,
   VNode,
 } from '@microsoft/msfs-sdk';
@@ -37,6 +38,8 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
   // Make sure to collect all subscriptions here, otherwise page navigation doesn't work.
   private readonly subs = [] as Subscription[];
 
+  private readonly eoActive = Subject.create<boolean>(false);
+
   private readonly sub = this.props.bus.getSubscriber<MfdSimvars & MfdSurvEvents>();
 
   private readonly xpdrFailed = Subject.create<boolean>(false);
@@ -50,6 +53,11 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
   private readonly xpdrState = ConsumerSubject.create(this.sub.on('xpdrState'), TransponderState.Off);
 
   private readonly xpdrAltRptgOn = Subject.create<boolean>(true);
+  private readonly xpdrAltRptgDisabled = MappedSubject.create(
+    ([failed, avail]) => failed || !avail,
+    this.xpdrFailed,
+    this.xpdrAltRptgAvailable,
+  );
 
   private readonly xpdrStatusSelectedIndex = Subject.create<number | null>(0);
   private readonly xpdrStatusRadioColor = this.xpdrStatusSelectedIndex.map((it) =>
@@ -85,7 +93,31 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
 
   private readonly wxrOnVd = Subject.create<boolean>(false);
 
-  private readonly tawsFailed = Subject.create<boolean>(false);
+  private readonly activeSystemGroupWxrTaws = ConsumerSubject.create(this.sub.on('wxrTawsSysSelected'), 0);
+  private readonly terr1Failed = ConsumerSubject.create(this.sub.on('terr1Failed'), false);
+  private readonly gpws1Failed = ConsumerSubject.create(this.sub.on('gpws1Failed'), false);
+  private readonly terr2Failed = ConsumerSubject.create(this.sub.on('terr2Failed'), false);
+  private readonly gpws2Failed = ConsumerSubject.create(this.sub.on('gpws2Failed'), false);
+
+  private readonly tawsTerrFailed = MappedSubject.create(
+    ([selected, f1, f2]) => (selected === 1 ? f1 : selected === 2 ? f2 : true),
+    this.activeSystemGroupWxrTaws,
+    this.terr1Failed,
+    this.terr2Failed,
+  );
+
+  private readonly tawsGpwsFailed = MappedSubject.create(
+    ([selected, f1, f2]) => (selected === 1 ? f1 : selected === 2 ? f2 : true),
+    this.activeSystemGroupWxrTaws,
+    this.gpws1Failed,
+    this.gpws2Failed,
+  );
+
+  private readonly allTawsFailed = MappedSubject.create(
+    SubscribableMapFunctions.and(),
+    this.tawsTerrFailed,
+    this.tawsGpwsFailed,
+  );
 
   private readonly tawsTerrSysOn = Subject.create<boolean>(true);
 
@@ -144,7 +176,25 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
         .handle((it) => this.tawsFlapModeOn.set(!it)),
     );
 
-    this.subs.push(this.xpdrSetAltReportingRequest, this.xpdrState, this.tcasFailed, this.tcasRadioGroupDisabled);
+    this.subs.push(
+      this.xpdrSetAltReportingRequest,
+      this.xpdrState,
+      this.xpdrAltRptgDisabled,
+      this.xpdrStatusRadioColor,
+      this.tcasFailed,
+      this.tcasRadioGroupDisabled,
+      this.activeSystemGroupWxrTaws,
+      this.terr1Failed,
+      this.terr2Failed,
+      this.gpws1Failed,
+      this.gpws2Failed,
+      this.tawsTerrFailed,
+      this.tawsGpwsFailed,
+      this.allTawsFailed,
+      this.props.fmcService.masterFmcChanged.sub(() =>
+        this.props.fmcService.master?.fmgc.data.engineOut.pipe(this.eoActive),
+      ),
+    );
   }
 
   public destroy(): void {
@@ -197,8 +247,11 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
       this.wxrOnVd.set(true);
     }
 
-    if (!this.tawsFailed.get()) {
+    if (!this.tawsTerrFailed.get()) {
       SimVar.SetSimVarValue('L:A32NX_GPWS_TERR_OFF', SimVarValueType.Bool, false);
+    }
+
+    if (!this.tawsGpwsFailed.get()) {
       SimVar.SetSimVarValue('L:A32NX_GPWS_SYS_OFF', SimVarValueType.Bool, false);
       SimVar.SetSimVarValue('L:A32NX_GPWS_GS_OFF', SimVarValueType.Bool, false);
       SimVar.SetSimVarValue('L:A32NX_GPWS_FLAPS_OFF', SimVarValueType.Bool, false);
@@ -211,7 +264,7 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
         <ActivePageTitleBar
           activePage={Subject.create('CONTROLS')}
           offset={Subject.create('')}
-          eoIsActive={Subject.create(false)}
+          eoIsActive={this.eoActive}
           tmpyIsActive={Subject.create(false)}
         />
         {/* begin page content */}
@@ -247,11 +300,7 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
                 </div>
                 <SurvButton
                   state={this.xpdrAltRptgOn}
-                  disabled={MappedSubject.create(
-                    ([failed, avail]) => failed || !avail,
-                    this.xpdrFailed,
-                    this.xpdrAltRptgAvailable,
-                  )}
+                  disabled={this.xpdrAltRptgDisabled}
                   labelFalse={'OFF'}
                   labelTrue={'ON'}
                   onChanged={(v) => {
@@ -383,13 +432,15 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
             </div>
           </div>
           <div class="mfd-surv-controls-third-section">
-            <div class={{ 'mfd-surv-heading': true, 'mfd-surv-taws-label': true, failed: this.tawsFailed }}>TAWS</div>
+            <div class={{ 'mfd-surv-heading': true, 'mfd-surv-taws-label': true, failed: this.allTawsFailed }}>
+              TAWS
+            </div>
             <div class="mfd-surv-controls-taws-section">
               <div class="mfd-surv-controls-taws-element" style="padding-right: 50px;">
                 <div class="mfd-surv-label">TERR SYS</div>
                 <SurvButton
-                  state={Subject.create(false)} // this.tawsTerrSysOn
-                  disabled={Subject.create(true)} // this.tawsFailed
+                  state={this.tawsTerrSysOn}
+                  disabled={this.tawsTerrFailed}
                   labelFalse={'OFF'}
                   labelTrue={'ON'}
                   onChanged={(v) => SimVar.SetSimVarValue('L:A32NX_GPWS_TERR_OFF', SimVarValueType.Bool, !v)}
@@ -399,7 +450,7 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
                 <div class="mfd-surv-label">GPWS</div>
                 <SurvButton
                   state={this.tawsGpwsOn}
-                  disabled={this.tawsFailed}
+                  disabled={this.tawsGpwsFailed}
                   labelFalse={'OFF'}
                   labelTrue={'ON'}
                   onChanged={(v) => SimVar.SetSimVarValue('L:A32NX_GPWS_SYS_OFF', SimVarValueType.Bool, !v)}
@@ -409,7 +460,7 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
                 <div class="mfd-surv-label">G/S MODE</div>
                 <SurvButton
                   state={this.tawsGsModeOn}
-                  disabled={this.tawsFailed}
+                  disabled={this.tawsGpwsFailed}
                   labelFalse={'OFF'}
                   labelTrue={'ON'}
                   onChanged={(v) => SimVar.SetSimVarValue('L:A32NX_GPWS_GS_OFF', SimVarValueType.Bool, !v)}
@@ -419,7 +470,7 @@ export class MfdSurvControls extends DisplayComponent<MfdSurvControlsProps> {
                 <div class="mfd-surv-label">FLAP MODE</div>
                 <SurvButton
                   state={this.tawsFlapModeOn}
-                  disabled={this.tawsFailed}
+                  disabled={this.tawsGpwsFailed}
                   labelFalse={'OFF'}
                   labelTrue={'ON'}
                   onChanged={(v) => SimVar.SetSimVarValue('L:A32NX_GPWS_FLAPS_OFF', SimVarValueType.Bool, !v)}

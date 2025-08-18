@@ -1,14 +1,14 @@
+// @ts-strict-ignore
 // Copyright (c) 2021-2022 FlyByWire Simulations
 // Copyright (c) 2021-2022 Synaptic Simulations
 //
 // SPDX-License-Identifier: GPL-3.0
 
-import { LegType, ProcedureTransition } from '@flybywiresim/fbw-sdk';
+import { LegType, ProcedureTransition, WaypointConstraintType } from '@flybywiresim/fbw-sdk';
 import { FlightPlanElement, FlightPlanLeg } from '@fmgc/flightplanning/legs/FlightPlanLeg';
 import { BaseFlightPlan, FlightPlanQueuedOperation } from '@fmgc/flightplanning/plans/BaseFlightPlan';
 import { SegmentClass } from '@fmgc/flightplanning/segments/SegmentClass';
 import { ProcedureSegment } from '@fmgc/flightplanning/segments/ProcedureSegment';
-import { WaypointConstraintType } from '@fmgc/flightplanning/data/constraint';
 import { RestringOptions } from '../plans/RestringOptions';
 
 export class ArrivalEnrouteTransitionSegment extends ProcedureSegment<ProcedureTransition> {

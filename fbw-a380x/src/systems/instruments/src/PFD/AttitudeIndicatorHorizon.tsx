@@ -1,3 +1,4 @@
+// @ts-strict-ignore
 import {
   ClockEvents,
   DisplayComponent,
@@ -457,6 +458,10 @@ class RadioAltAndDH extends DisplayComponent<{
   filteredRadioAltitude: Subscribable<number>;
   attExcessive: Subscribable<boolean>;
 }> {
+  private readonly altitude = Arinc429ConsumerSubject.create(
+    this.props.bus.getArincSubscriber<Arinc429Values>().on('altitudeAr'),
+  );
+
   private daRaGroup = FSComponent.createRef<SVGGElement>();
 
   private roll = new Arinc429Word(0);
@@ -472,8 +477,6 @@ class RadioAltAndDH extends DisplayComponent<{
   private transLvlAr = Arinc429Register.empty();
 
   private fmgcFlightPhase = 0;
-
-  private altitude = new Arinc429Word(0);
 
   private attDhText = FSComponent.createRef<SVGTextElement>();
 
@@ -520,10 +523,6 @@ class RadioAltAndDH extends DisplayComponent<{
         this.fmgcFlightPhase = fp;
       });
 
-    sub.on('altitudeAr').handle((a) => {
-      this.altitude = a;
-    });
-
     sub.on('chosenRa').handle((ra) => {
       if (!this.props.attExcessive.get()) {
         this.radioAltitude = ra;
@@ -535,8 +534,8 @@ class RadioAltAndDH extends DisplayComponent<{
         const chosenTransalt = useTransAltVsLvl ? this.transAltAr : this.transLvlAr;
         const belowTransitionAltitude =
           chosenTransalt.isNormalOperation() &&
-          !this.altitude.isNoComputedData() &&
-          this.altitude.value < (useTransAltVsLvl ? chosenTransalt.value : chosenTransalt.value * 100);
+          !this.altitude.get().isNoComputedData() &&
+          this.altitude.get().value < (useTransAltVsLvl ? chosenTransalt.value : chosenTransalt.value * 100);
         let size = 'FontLarge';
         const DHValid = this.dh >= 0;
 
